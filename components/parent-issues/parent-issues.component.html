@@ -1,0 +1,114 @@
+<h2>Edit Template</h2>
+<br>
+<app-breadcrumbs [backButtonLabel]="'Templates'" [template]="template"></app-breadcrumbs>
+
+<div class="aui-group" *ngIf="template && !loaderTemplate">
+  <form class="aui" appPrompt #templateForm="ngForm" (submit)="templateForm.form.valid && updateTemplate()">
+    <div class="field-group">
+      <label for="template_name">Template Name: </label>
+      <input type="text medium-field" class="text" name="template_name" id="template_name" placeholder="Enter template name" required [(ngModel)]="templateModel.template_name"
+        #template_name="ngModel" (keyup)="templateNameChange(template_name.value)">
+        <div [hidden]="template_name.valid || template_name.pristine" class="error"> Enter template name </div>
+      </div>
+    <div class="field-group">
+      <div class="checkbox">
+          <input class="checkbox" type="checkbox" name="enabled" id="enabled" #enabled [ngModel]="templateModel.enabled == 1 ? true :templateModel.enabled == 0 ? false : null" (ngModelChange)="toggleEnabled($event)">
+          <label for="enabled">Enabled</label>
+        </div>
+      </div>
+    <div class="buttons-container">
+      <div class="buttons">     
+        <button type="submit" class="aui-button" [disabled]="toggleSaveButton()">Save</button>
+        <button type="button" class="aui-button aui-button-light" [disabled]="changingTemplate" (click)="resetTemplate()" appPrompt>Cancel</button>
+        <span *ngIf="changingTemplate" class="aui-icon aui-icon-wait"></span>
+      </div>
+    </div>    
+  </form> 
+</div>
+<div *ngIf="loaderTemplate"><span class="aui-icon aui-icon-wait"></span>Loading...</div>
+<div class="aui-group" *ngIf="template">
+  <h3>Parent Issues</h3> 
+  <div *ngIf="!parentIssues.length && !loaderParentIssues">
+    <p>Add new parent issues, by pressing a button below!</p>
+    <br>
+  </div>
+  <div *ngIf="issueTypes.length">
+    <button class="aui-button aui-button-primary" type="button" (click)="createParentIssue()" [disabled]="issueTypes.length === parentIssues.length">New Parent Issue</button>
+    <div class="error" *ngIf="issueTypes.length === parentIssues.length">
+      All possible parent types were created
+    </div>
+  </div>
+</div>
+<div class="aui-group" id="parent-issues-table" *ngIf="parentIssues.length && !loaderParentIssues">
+  <table class="aui">
+    <thead>
+      <tr>
+        <th id="parentIssueType">Parent Issue</th>
+        <th id="childIssues">Child Issues</th>
+        <th id="edit">Edit</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let issue of parentIssues">
+        <td headers="parentIssueType">{{issue.issue_type}}</td>
+        <td headers="childIssues">{{issue.child_issues_count}}</td>
+        <td headers="edit">
+          <button routerLink="{{ issue.id + '/children' }}" class="aui-button">
+            <span class="aui-icon aui-icon-small aui-iconfont-edit"></span>
+          </button>
+          <button (click)="deleteParentIssue(issue.id)" [disabled]="issue.id === selectedIssue" class="aui-button">
+            <span class="aui-icon aui-icon-small aui-iconfont-delete"></span>
+          </button>
+          <span *ngIf="issue.id === selectedIssue" class="aui-icon aui-icon-wait"></span>
+        </td>
+      </tr>
+    </tbody>
+  </table>  
+</div>
+<div *ngIf="loaderParentIssues"><span class="aui-icon aui-icon-wait"></span>Loading...</div>
+<h3>Projects</h3>
+<br>
+<div *ngIf="loaderTemplateProjects"><span class="aui-icon aui-icon-wait"></span>Loading...</div>
+<div class="aui-group" *ngIf="!loaderTemplateProjects">    
+  <div *ngIf="!templateProjects.length">
+    <p>You can select a project and add it to this template.</p>
+    <br>
+  </div>
+  <form class="aui" (submit)="addProject(selProject)" *ngIf="projects.length">
+    <div class="field-group">
+      <label for="project">Project:</label>
+      <select class="select" name="project" id="project" #selProject required>
+        <option disabled hidden [value]="0">Select a project...</option>
+        <option *ngFor="let project of projects" [value]="project.key">{{ project.name }}</option>
+      </select>
+      <button type="submit" class="aui-button" [disabled]="addingProject">Add</button>
+      <span *ngIf="addingProject" class="aui-icon aui-icon-wait"></span>
+    </div>
+  </form>  
+  <table class="aui" *ngIf="templateProjects.length">
+    <thead>
+      <tr>
+        <th id="status">Status</th>
+        <th id="project">Project</th>
+        <th id="remove">Remove</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let project of templateProjects">
+        <td headers="status">
+          <button class="aui-button" data-toggle="tooltip" [title]="'Does not contain issue types: ' + project.missingIssues.join(', ')"
+            *ngIf="project.missingIssues">
+            <span class="aui-icon aui-icon-small aui-iconfont-warning"></span>
+          </button>
+        </td>
+        <td headers="project">{{project.name}}</td>
+        <td headers="remove">
+          <button type="button" class="aui-button" [disabled]="project.id === selectedProject"  (click)="deleteProject(project.id)">
+            <span class="aui-icon aui-icon-small aui-iconfont-delete"></span>
+          </button>          
+          <span *ngIf="project.id === selectedProject" class="aui-icon aui-icon-wait"></span>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
